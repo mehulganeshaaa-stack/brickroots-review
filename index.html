@@ -1,65 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0D2E3E">
-<title>BRICKroots Realty | Share Your Experience</title>
-<style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif}
-body{background:#0D2E3E;color:#20282C}.page{min-height:100vh;background:linear-gradient(158deg,#0D2E3E 0%,#15435A 45%,#F8F7F3 45.1%);padding:18px 14px 28px}
-.wrap{max-width:600px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;color:#fff}
-.brand{display:flex;align-items:center;gap:10px}.logo{width:45px;height:45px;border:1px solid #AB8748;border-radius:13px;display:grid;place-items:center;font:700 16px Georgia}
-.brandname{font-size:20px;font-weight:800}.brandname span{font:500 20px Georgia;color:#D5B777}.realty{display:block;font-size:8px;letter-spacing:4px;color:#D5B777;margin-top:2px}
-.trust{font-size:9px;color:#e8eef0;border:1px solid #ffffff29;background:#ffffff12;padding:8px 10px;border-radius:999px}
-.hero{color:#fff;padding:50px 4px 29px}.eyebrow{font-size:10px;letter-spacing:2.2px;font-weight:800;color:#D5B777;margin-bottom:15px}
-.hero h1{font:700 clamp(39px,10vw,59px)/1.01 Georgia,"Times New Roman",serif;letter-spacing:-1.8px;margin:0 0 15px}
-.hero h1 em{color:#D5B777;font-style:normal}.hero p{font-size:14px;line-height:1.7;color:#dce6e9;max-width:500px;margin:0}
-.card{background:#fff;border:1px solid #ab874855;border-radius:26px;padding:22px;box-shadow:0 25px 70px #03172145}
-.top{display:flex;align-items:flex-start;justify-content:space-between}.label{font-size:9px;letter-spacing:2px;font-weight:800;color:#788388}
-.label span{color:#AB8748;margin-left:6px}.stars{color:#AB8748;font-size:19px;letter-spacing:3px;margin-top:8px}
-.refresh{width:43px;height:43px;border:1px solid #d6dfe2;border-radius:13px;background:#F8F7F3;color:#15435A;font-size:22px;cursor:pointer}
-.review{font:700 clamp(21px,5.2vw,29px)/1.42 Georgia,"Times New Roman",serif;color:#0D2E3E;margin:24px 0 20px}
-.review:before{content:"“";font-size:44px;color:#AB8748;vertical-align:-13px;margin-right:3px}
-.tip{display:flex;gap:8px;background:#F1F5F5;border-radius:13px;padding:12px 13px;color:#647176;font-size:11px;line-height:1.5}
-.actions{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:14px}
-.copy,.google{height:53px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font:800 13px Arial;cursor:pointer;text-decoration:none}
-.copy{background:#15435A;color:#fff}.google{background:#AB8748;color:#fff}
-.note{text-align:center;color:#65767d;font-size:10px;line-height:1.5;padding:17px 12px 25px}
-footer{display:flex;align-items:center;justify-content:center;gap:10px;color:#9ba9ae;font-size:7px;letter-spacing:2.3px}footer i{height:1px;width:34px;background:#AB8748}
-.error{margin-top:12px;color:#8b4d32;background:#fff3ed;border-radius:10px;padding:10px;font-size:11px;display:none}
-@media(max-width:450px){.page{padding:17px 13px 24px}.trust{font-size:8px;padding:7px 8px}.hero{padding-top:42px}.card{padding:19px;border-radius:22px}.actions{grid-template-columns:1fr}}
-</style></head>
-<body><div class="page"><div class="wrap">
-<header><div class="brand"><div class="logo">BR</div><div><div class="brandname">BRICK<span>roots</span></div><span class="realty">REALTY</span></div></div><div class="trust">● Trusted service</div></header>
-<section class="hero"><div class="eyebrow">✦ YOUR EXPERIENCE MATTERS</div><h1>Tell us what you<br><em>really think.</em></h1><p>A few honest words can help others make a confident decision — and help our team serve you better.</p></section>
-<section class="card"><div class="top"><div><div class="label">SUGGESTION <span id="counter"></span></div><div class="stars">★★★★★</div></div><button class="refresh" id="newBtn" aria-label="New suggestion">↻</button></div>
-<div class="review" id="review">Loading your suggestion…</div>
-<div class="tip">✎ <span>Make it yours. Edit the suggestion so it reflects your <strong>actual experience</strong>.</span></div>
-<div class="actions"><button class="copy" id="copy">⧉ &nbsp; Copy suggestion</button><a class="google" id="google" target="_blank" rel="noopener">G &nbsp; Review on Google &nbsp; ↗</a></div>
-<div class="error" id="error"></div></section>
-<div class="note">♡ &nbsp; No information is collected here. Your review is yours to write and submit.</div>
-<footer><i></i> BUILDING TRUST. CREATING VALUE. <i></i></footer></div></div>
-<script src="config.js"></script><script>
-const cfg=window.BRICKROOTS_CONFIG||{};
-const review=document.getElementById("review"),counter=document.getElementById("counter"),err=document.getElementById("error"),copy=document.getElementById("copy"),newBtn=document.getElementById("newBtn"),google=document.getElementById("google");
-google.href=cfg.googleReviewUrl||"#";
-let loading=false;
-async function claim(){
- if(loading)return; loading=true; err.style.display="none"; review.textContent="Loading your suggestion…";
- if(!cfg.apiBase||!cfg.supabaseAnonKey){showError("Review service is not configured. Please check config.js.");return}
- try{
-   const res=await fetch(cfg.apiBase.replace(/\/$/,"")+"/rest/v1/rpc/claim_next_review",{method:"POST",headers:{"apikey":cfg.supabaseAnonKey,"Content-Type":"application/json","Accept":"application/json"},body:"{}"});
-   const text=await res.text();
-   if(!res.ok)throw new Error("Supabase "+res.status+": "+text);
-   const data=JSON.parse(text);
-   if(!data.review_text)throw new Error("No review text returned.");
-   review.textContent=data.review_text;
-   counter.textContent=data.id ? ("Review #"+data.id) : "";
- }catch(e){console.error(e);showError("Could not load a review right now. Please try again.");review.textContent="Please try again.";}
- loading=false;
-}
-function showError(msg){err.textContent=msg;err.style.display="block";loading=false}
-newBtn.onclick=claim;
-copy.onclick=async()=>{try{await navigator.clipboard.writeText(review.textContent);copy.textContent="✓  Copied"}catch(e){copy.textContent="Copy failed"}setTimeout(()=>copy.textContent="⧉  Copy suggestion",1600)};
-claim();
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BRICKroots Realty | Share Your Experience</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#0D2E3E;color:#20282C}.page{min-height:100vh;background:linear-gradient(158deg,#0D2E3E 0%,#15435A 45%,#F8F7F3 45.1%);padding:18px 14px 28px}.wrap{max-width:600px;margin:auto}.brand{display:flex;align-items:center;gap:10px;color:#fff}.logo{width:45px;height:45px;border:1px solid #AB8748;border-radius:13px;display:grid;place-items:center;font:700 16px Georgia}.brandname{font-size:20px;font-weight:800}.brandname span{font:500 20px Georgia;color:#D5B777}.realty{display:block;font-size:8px;letter-spacing:4px;color:#D5B777;margin-top:2px}.hero{color:#fff;padding:50px 4px 29px}.eyebrow{font-size:10px;letter-spacing:2px;font-weight:800;color:#D5B777}.hero h1{font:700 52px/1.02 Georgia;margin:15px 0}.hero h1 em{color:#D5B777;font-style:normal}.hero p{font-size:14px;line-height:1.7;color:#dce6e9}.card{background:#fff;border:1px solid #ab874855;border-radius:26px;padding:22px;box-shadow:0 25px 70px #03172145}.top{display:flex;justify-content:space-between}.label{font-size:9px;letter-spacing:2px;font-weight:800;color:#788388}.stars{color:#AB8748;font-size:19px;letter-spacing:3px;margin-top:8px}.refresh{width:43px;height:43px;border:1px solid #d6dfe2;border-radius:13px;background:#F8F7F3;color:#15435A;font-size:22px;cursor:pointer}.review{font:700 27px/1.42 Georgia;color:#0D2E3E;margin:24px 0 20px}.review:before{content:"“";font-size:44px;color:#AB8748;vertical-align:-13px}.tip{background:#F1F5F5;border-radius:13px;padding:12px;color:#647176;font-size:11px;line-height:1.5}.actions{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:14px}.copy,.google{height:53px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none}.copy{background:#15435A;color:white}.google{background:#AB8748;color:white}.msg{display:none;margin-top:15px;padding:13px;border-radius:12px;font-size:12px}.success{background:#edf8f1;color:#24633e}.empty{background:#f2f5f5;color:#4f6067}.note{text-align:center;color:#65767d;font-size:10px;line-height:1.5;padding:17px 12px 25px}@media(max-width:450px){.actions{grid-template-columns:1fr}.hero h1{font-size:42px}}</style></head><body><div class="page"><div class="wrap"><header class="brand"><div class="logo">BR</div><div><div class="brandname">BRICK<span>roots</span></div><span class="realty">REALTY</span></div></header><section class="hero"><div class="eyebrow">✦ YOUR EXPERIENCE MATTERS</div><h1>Tell us what you<br><em>really think.</em></h1><p>A few honest words can help others make a confident decision — and help our team serve you better.</p></section><section class="card"><div class="top"><div><div class="label">PERSONAL REVIEW SUGGESTION</div><div class="stars">★★★★★</div></div><button class="refresh" id="newBtn">↻</button></div><div class="review" id="review">Loading your suggestion…</div><div class="tip">✎ &nbsp;Make it yours. Edit the suggestion so it reflects your <strong>actual experience</strong>.</div><div class="actions"><button class="copy" id="copy">⧉ &nbsp; Copy suggestion</button><a class="google" id="google" target="_blank">G &nbsp; Review on Google &nbsp; ↗</a></div><div id="msg" class="msg"></div></section><div class="note">Used suggestions are never recycled. A suggestion is consumed when you open Google Review.</div></div></div><script src="config.js"></script><script>
+const c=window.BRICKROOTS_CONFIG||{},base=(c.apiBase||"").replace(/\/$/,""),review=document.getElementById("review"),msg=document.getElementById("msg"),copy=document.getElementById("copy"),google=document.getElementById("google"),newBtn=document.getElementById("newBtn");google.href=c.googleReviewUrl||"#";let current=null,busy=false;
+function message(t,cl){msg.textContent=t;msg.className="msg "+cl;msg.style.display="block"}
+async function load(){if(busy)return;busy=true;msg.style.display="none";review.textContent="Loading your suggestion…";try{let r=await fetch(base+"/rest/v1/rpc/get_next_review",{method:"POST",headers:{"apikey":c.supabaseAnonKey,"Content-Type":"application/json"},body:"{}"});let t=await r.text();if(!r.ok)throw Error(t);let d=JSON.parse(t);if(!d.id){current=null;review.textContent="No more review suggestions are available.";newBtn.style.display="none";copy.style.display="none";google.style.display="none";message("All available suggestions have already been used.","empty")}else{current=d;review.textContent=d.review_text;newBtn.style.display="block";copy.style.display="flex";google.style.display="flex"}}catch(e){console.error(e);review.textContent="Please try again.";message("Could not load a suggestion right now.","empty")}busy=false}
+copy.onclick=async()=>{if(!current)return;try{await navigator.clipboard.writeText(current.review_text);copy.textContent="✓ Copied";setTimeout(()=>copy.textContent="⧉  Copy suggestion",1500)}catch(e){message("Copy failed. Please copy the text manually.","empty")}};
+google.onclick=async e=>{if(!current)return;e.preventDefault();try{let r=await fetch(base+"/rest/v1/rpc/consume_review",{method:"POST",headers:{"apikey":c.supabaseAnonKey,"Content-Type":"application/json"},body:JSON.stringify({p_id:current.id})});if(!r.ok)throw Error(await r.text());window.open(c.googleReviewUrl,"_blank","noopener");current=null;review.textContent="Thank you for sharing your experience.";newBtn.style.display="none";copy.style.display="none";google.style.display="none";message("This suggestion is now permanently used and will not appear again.","success")}catch(e){console.error(e);window.open(c.googleReviewUrl,"_blank","noopener");message("Google Review opened, but the suggestion could not be marked used.","empty")}};
+newBtn.onclick=load;load();
 </script></body></html>
