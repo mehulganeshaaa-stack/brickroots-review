@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BRICKroots | Review Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f3ee;color:#20282c}
+.wrap{max-width:900px;margin:auto;padding:24px 16px 50px}.head{background:#0d2e3e;color:#fff;border-radius:20px;padding:24px}.brand{font-size:24px;font-weight:800}.brand span{color:#d5b777;font-family:Georgia}.sub{font-size:9px;letter-spacing:3px;color:#d5b777;margin-top:4px}
+.card{background:#fff;border-radius:18px;padding:20px;margin-top:16px;box-shadow:0 10px 30px #00000012}.hidden{display:none}
+input,textarea{width:100%;padding:12px 13px;border:1px solid #ccd7dc;border-radius:10px;font:inherit;margin:7px 0 12px}
+textarea{min-height:110px;resize:vertical}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:#15435a;color:#fff;margin-right:7px}
+.gold{background:#ab8748}.danger{background:#9a4f43}.muted{background:#e9eef0;color:#15435a}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item{border-top:1px solid #e7ecee;padding:16px 0}.item:first-child{border-top:0}.text{line-height:1.5}.meta{font-size:10px;color:#77838a;margin-bottom:7px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f1f5f5;border-radius:12px;padding:14px}.num{font-size:24px;font-weight:800;color:#15435a}.lbl{font-size:10px;color:#6d797e;margin-top:4px}
+.msg{font-size:12px;padding:10px;border-radius:9px;margin-top:10px;display:none}.ok{background:#e9f6ee;color:#23643d}.err{background:#fff0ed;color:#8c3d32}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.row button{width:100%;margin:3px 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="brand">BRICK<span>roots</span> Realty</div>
+    <div class="sub">REVIEW MANAGER</div>
+  </div>
+
+  <div id="loginCard" class="card">
+    <h2>Admin Login</h2>
+    <p>Sign in with your authorized BRICKroots admin account.</p>
+    <input id="email" type="email" placeholder="Admin email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="login">Sign in</button>
+    <div id="loginMsg" class="msg err"></div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">Review Library</h2>
+        <button id="logout" class="muted">Sign out</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="num" id="total">0</div><div class="lbl">TOTAL</div></div>
+        <div class="stat"><div class="num" id="available">0</div><div class="lbl">AVAILABLE</div></div>
+        <div class="stat"><div class="num" id="used">0</div><div class="lbl">USED</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="formTitle">Add review suggestion</h3>
+      <textarea id="reviewText" placeholder="Write a natural review suggestion..."></textarea>
+      <button id="save">Add Review</button>
+      <button id="cancel" class="muted hidden">Cancel edit</button>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">Suggestions</h3>
+        <button id="reset" class="gold">Reset Cycle</button>
+      </div>
+      <div id="list">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const cfg=window.BRICKROOTS_CONFIG||{};
+const base=(cfg.apiBase||"").replace(/\/$/,"");
+let token=null, editingId=null;
+const $=id=>document.getElementById(id);
+function headers(extra={}){return {"apikey":cfg.supabaseAnonKey,"Authorization":"Bearer "+token,"Content-Type":"application/json",...extra}}
+function show(el,text,good=false){el.textContent=text;el.className="msg "+(good?"ok":"err");el.style.display="block"}
+async function login(){
+  const email=$("email").value.trim(), password=$("password").value;
+  if(!email||!password)return show($("loginMsg"),"Enter email and password.");
+  try{
+    const r=await fetch(base+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"apikey":cfg.supabaseAnonKey,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.msg||d.error_description||"Login failed");
+    token=d.access_token;
+    $("loginCard").classList.add("hidden");$("app").classList.remove("hidden");load();
+  }catch(e){show($("loginMsg"),e.message)}
+}
+async function load(){
+  const r=await fetch(base+"/rest/v1/review_suggestions?select=id,review_text,is_used,created_at&order=id",{headers:headers()});
+  if(!r.ok){show($("msg"),"You are not authorized to manage reviews.");return}
+  const d=await r.json();
+  $("total").textContent=d.length;$("used").textContent=d.filter(x=>x.is_used).length;$("available").textContent=d.filter(x=>!x.is_used).length;
+  $("list").innerHTML=d.map(x=>`<div class="item"><div class="meta">#${x.id} · ${x.is_used?"USED":"AVAILABLE"}</div><div class="text">${escapeHtml(x.review_text)}</div><div class="row" style="margin-top:9px"><button class="muted" onclick="edit(${x.id})">Edit</button><button class="danger" onclick="del(${x.id})">Delete</button></div></div>`).join("")||"<p>No suggestions yet.</p>";
+  window.rows=d;
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+window.edit=id=>{const x=window.rows.find(r=>r.id===id);if(!x)return;editingId=id;$("reviewText").value=x.review_text;$("formTitle").textContent="Edit review suggestion";$("save").textContent="Save Changes";$("cancel").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
+window.del=async id=>{if(!confirm("Delete this review suggestion?"))return;const r=await fetch(base+"/rest/v1/review_suggestions?id=eq."+id,{method:"DELETE",headers:headers({"Prefer":"return=minimal"})});if(!r.ok){show($("msg"),"Delete failed.");return}load()}
+$("save").onclick=async()=>{
+  const text=$("reviewText").value.trim();if(!text)return show($("msg"),"Write a review suggestion first.");
+  let r;
+  if(editingId) r=await fetch(base+"/rest/v1/review_suggestions?id=eq."+editingId,{method:"PATCH",headers:headers({"Prefer":"return=minimal"}),body:JSON.stringify({review_text:text})});
+  else r=await fetch(base+"/rest/v1/review_suggestions",{method:"POST",headers:headers({"Prefer":"return=minimal"}),body:JSON.stringify({review_text:text,is_used:false})});
+  if(!r.ok){show($("msg"),"Save failed. Check your admin access.");return}
+  show($("msg"),editingId?"Review updated.":"Review added.",true);resetForm();load();
+};
+$("cancel").onclick=resetForm;
+function resetForm(){editingId=null;$("reviewText").value="";$("formTitle").textContent="Add review suggestion";$("save").textContent="Add Review";$("cancel").classList.add("hidden")}
+$("reset").onclick=async()=>{
+  if(!confirm("Reset all used reviews so they become available again?"))return;
+  const r=await fetch(base+"/rest/v1/review_suggestions?is_used=eq.true",{method:"PATCH",headers:headers({"Prefer":"return=minimal"}),body:JSON.stringify({is_used:false})});
+  if(!r.ok)return show($("msg"),"Reset failed.");
+  show($("msg"),"Review cycle reset successfully.",true);load();
+};
+$("logout").onclick=()=>{token=null;$("app").classList.add("hidden");$("loginCard").classList.remove("hidden");$("password").value=""};
+$("login").onclick=login;
+</script>
+</body></html>
