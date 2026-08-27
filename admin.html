@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BRICKroots Realty | Review Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0D2E3E;--navy2:#15435A;--gold:#AB8748;--gold2:#D5B777;--bg:#F5F5F1;--card:#fff;--ink:#18282f;--muted:#6d7c82;--line:#dfe6e7;--green:#23724b;--red:#b34b4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif}
+button,input,textarea{font:inherit}.hidden{display:none!important}
+.app{min-height:100vh}.topbar{background:linear-gradient(135deg,var(--navy),#103b4e);color:#fff;padding:20px 24px;position:sticky;top:0;z-index:10;box-shadow:0 8px 30px #102f3b22}
+.top-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:12px}.logo-box{background:#F8F7F3;border-radius:12px;padding:7px 12px;width:170px}.logo-box img{width:100%;display:block}.sub{font-size:9px;letter-spacing:2px;color:var(--gold2);font-weight:800;margin-top:5px}
+.logout{border:1px solid #ffffff33;background:#ffffff10;color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer}.container{max-width:1180px;margin:30px auto;padding:0 20px}
+.login-wrap{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:30px 15px}.login-card{width:min(430px,100%);background:#fff;border-radius:24px;padding:30px;box-shadow:0 25px 70px #18384218;border:1px solid var(--line)}
+.login-card h1{font:700 32px Georgia;margin:20px 0 8px;color:var(--navy)}.login-card p{color:var(--muted);font-size:13px;line-height:1.6}
+.field{margin:15px 0}.field label{display:block;font-size:11px;font-weight:800;color:#53636a;margin-bottom:7px}.field input,.field textarea,.search{width:100%;border:1px solid #cfdadd;border-radius:11px;padding:12px 13px;outline:none;background:#fff}.field input:focus,.field textarea:focus,.search:focus{border-color:var(--gold);box-shadow:0 0 0 3px #AB874818}
+.primary{border:0;border-radius:11px;background:var(--navy);color:#fff;padding:12px 18px;font-weight:800;cursor:pointer}.gold{background:var(--gold)}.danger{background:#fff0f0;color:var(--red);border:1px solid #f0caca;border-radius:9px;padding:8px 11px;font-weight:700;cursor:pointer}.secondary{background:#eef3f4;color:var(--navy);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-weight:700;cursor:pointer}
+.error,.notice{padding:11px 13px;border-radius:10px;font-size:12px;margin-top:12px}.error{background:#fff0f0;color:#a13e3e}.notice{background:#edf8f1;color:var(--green)}
+.heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:20px}.heading h1{font:700 36px Georgia;margin:0;color:var(--navy)}.heading p{color:var(--muted);font-size:13px;margin:7px 0 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{background:#fff;border:1px solid var(--line);border-radius:17px;padding:19px;box-shadow:0 8px 25px #18384208}.stat .num{font-size:29px;font-weight:900;color:var(--navy)}.stat .lab{font-size:9px;letter-spacing:1.5px;color:var(--muted);font-weight:800;margin-top:4px}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 10px 35px #1838420a}.panel h2{font:700 22px Georgia;color:var(--navy);margin:0 0 5px}.panel .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:15px}.bulk{min-height:280px;resize:vertical}
+.row{display:flex;gap:9px;align-items:center}.row>*{flex:1}.row .fit{flex:0 0 auto}.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px}.toolbar .search{max-width:330px}.toolbar select{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+.list{display:grid;gap:10px;max-height:650px;overflow:auto;padding-right:3px}.item{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;transition:.2s}.item:hover{transform:translateY(-1px);box-shadow:0 7px 20px #1838420d}.item.used{opacity:.62;background:#f7f8f8}.item-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{font-size:9px;font-weight:900;letter-spacing:1px;border-radius:20px;padding:5px 8px;background:#edf8f1;color:var(--green)}.badge.used{background:#eef0f1;color:#68777c}.text{font:600 15px/1.55 Georgia;color:var(--navy);margin:10px 0}.actions{display:flex;gap:7px;justify-content:flex-end}.small{font-size:10px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:#061d26aa;display:grid;place-items:center;padding:20px;z-index:30}.modal-card{background:#fff;width:min(650px,100%);border-radius:20px;padding:22px;box-shadow:0 30px 100px #0004}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h3{font:700 23px Georgia;color:var(--navy);margin:0}.close{border:0;background:#eef3f4;border-radius:9px;padding:8px 11px;cursor:pointer}.modal textarea{width:100%;min-height:210px;margin:15px 0;border:1px solid var(--line);border-radius:12px;padding:13px;resize:vertical;outline:none}
+.footer{text-align:center;color:#8a989d;font-size:9px;letter-spacing:2px;padding:25px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:550px){.topbar{padding:15px}.container{padding:0 12px;margin-top:20px}.heading{display:block}.heading h1{font-size:29px}.stats{grid-template-columns:repeat(2,1fr)}.top-inner{align-items:flex-start}.logo-box{width:145px}.toolbar{flex-wrap:wrap}.toolbar .search{max-width:none}.actions{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <div class="logo-box"><img src="brickroots-logo.png" alt="BRICKroots Realty"></div>
+    <div class="sub">PRIVATE REVIEW MANAGER</div>
+    <h1>Welcome back.</h1>
+    <p>Sign in to manage your review suggestion library. Customer-facing reviews are never recycled.</p>
+    <div class="field"><label>ADMIN EMAIL</label><input id="email" type="email" autocomplete="username" placeholder="admin@example.com"></div>
+    <div class="field"><label>PASSWORD</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    <button id="loginBtn" class="primary" style="width:100%">Sign in</button>
+    <div id="loginMsg" class="error hidden"></div>
+  </div>
+</div>
+
+<div id="appView" class="app hidden">
+<header class="topbar"><div class="top-inner">
+  <div class="brand"><div class="logo-box"><img src="brickroots-logo.png" alt="BRICKroots Realty"></div><div><div style="font-weight:900">Review Manager</div><div class="sub">PRIVATE ADMIN AREA</div></div></div>
+  <button id="logoutBtn" class="logout">Sign out</button>
+</div></header>
+
+<main class="container">
+<div class="heading"><div><h1>Review Library</h1><p>Manage unique suggestions. Used reviews are automatically removed and retained in Usage History.</p></div><button id="refreshBtn" class="secondary">↻ Refresh</button></div>
+
+<section class="stats">
+  <div class="stat"><div class="num" id="total">0</div><div class="lab">ACTIVE TOTAL</div></div>
+  <div class="stat"><div class="num" id="available">0</div><div class="lab">AVAILABLE</div></div>
+  <div class="stat"><div class="num" id="used">0</div><div class="lab">USED (HISTORY)</div></div>
+  <div class="stat"><div class="num" id="remaining">0</div><div class="lab">READY</div></div>
+</section>
+
+<div class="grid">
+<section class="panel">
+  <h2>Add reviews</h2>
+  <div class="hint">Add one review per paragraph. You can paste 10, 50 or 150 at once. Duplicate exact text is skipped.</div>
+  <textarea id="bulkText" class="field bulk" placeholder="Paste review 1 here...&#10;&#10;Paste review 2 here...&#10;&#10;Paste review 3 here..."></textarea>
+  <div class="row" style="margin-top:10px"><button id="addBtn" class="primary gold">＋ Add reviews</button><button id="clearBtn" class="secondary fit">Clear</button></div>
+  <div id="addMsg" class="notice hidden"></div>
+</section>
+
+<section class="panel">
+  <div class="toolbar">
+    <input id="search" class="search" placeholder="Search reviews...">
+    <select id="filter"><option value="all">All</option><option value="available">Available</option><option value="used">Used</option></select>
+  </div>
+  <div id="list" class="list"></div>
+  <div id="listMsg" class="small" style="padding:15px;text-align:center">Loading…</div>
+</section>
+</div>
+<section class="panel" style="margin-top:18px">
+  <div class="heading" style="margin-bottom:12px"><div><h2 style="font-size:22px">Usage History</h2><p style="font-size:11px;color:#6d7c82;margin:6px 0 0">Used suggestions are deleted from the active library but kept here for record.</p></div></div>
+  <div id="historyList" class="list" style="max-height:360px"></div>
+  <div id="historyMsg" class="small" style="padding:15px;text-align:center">Loading…</div>
+</section>
+<div class="footer">BUILDING TRUST · CREATING VALUE</div>
+</main>
+</div>
+
+<div id="editModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h3>Edit review suggestion</h3><button id="closeModal" class="close">✕</button></div>
+    <textarea id="editText"></textarea>
+    <div class="row"><button id="saveEdit" class="primary">Save changes</button><button id="cancelEdit" class="secondary fit">Cancel</button></div>
+    <div id="editMsg" class="error hidden"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const CFG=window.BRICKROOTS_CONFIG||{};
+const SUPABASE_URL=(CFG.apiBase||"").replace(/\/$/,"");
+const SUPABASE_KEY=CFG.supabaseAnonKey||"";
+const client=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+let rows=[],editingId=null;
+
+const $=id=>document.getElementById(id);
+function show(el,text,type="error"){el.textContent=text;el.className=type==="error"?"error":"notice";el.classList.remove("hidden")}
+function hide(el){el.classList.add("hidden")}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+async function isAdmin(){
+  const {data:{user}}=await client.auth.getUser();
+  if(!user)return false;
+  const {data,error}=await client.from("review_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+  return !error && !!data;
+}
+async function boot(){
+  if(!client || !SUPABASE_URL || !SUPABASE_KEY){show($("loginMsg"),"config.js is missing or not configured.");return}
+  const {data:{session}}=await client.auth.getSession();
+  if(session && await isAdmin()){openApp();return}
+  openLogin();
+}
+function openLogin(){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden")}
+function openApp(){$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");loadReviews()}
+
+$("loginBtn").onclick=async()=>{
+  hide($("loginMsg"));$("loginBtn").disabled=true;$("loginBtn").textContent="Signing in…";
+  const {error}=await client.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error){show($("loginMsg"),error.message);$("loginBtn").disabled=false;$("loginBtn").textContent="Sign in";return}
+  if(!(await isAdmin())){await client.auth.signOut();show($("loginMsg"),"This account is not authorised as an admin.");$("loginBtn").disabled=false;$("loginBtn").textContent="Sign in";return}
+  $("loginBtn").disabled=false;$("loginBtn").textContent="Sign in";openApp();
+};
+$("logoutBtn").onclick=async()=>{await client.auth.signOut();openLogin()};
+$("refreshBtn").onclick=loadReviews;
+$("clearBtn").onclick=()=>{$("bulkText").value="";hide($("addMsg"))};
+
+async function loadReviews(){
+  $("listMsg").textContent="Loading…";rows=[];await loadHistory();
+  const {data,error}=await client.from("review_suggestions").select("id,review_text,is_used").order("id",{ascending:true});
+  if(error){$("listMsg").textContent="Could not load reviews: "+error.message;return}
+  rows=data||[];render();updateStats();
+}
+async function loadHistory(){
+  if(!$("historyList"))return;
+  $("historyMsg").textContent="Loading…";
+  const {data,error}=await client.from("review_usage_log").select("usage_id,original_review_id,review_text,used_at").order("used_at",{ascending:false}).limit(200);
+  if(error){$("historyMsg").textContent="Could not load history: "+error.message;return}
+  const list=data||[];
+  $("historyList").innerHTML=list.map(r=>`<article class="item used">
+    <div class="item-top"><span class="small">Usage #${r.usage_id}${r.original_review_id?" · Review #"+r.original_review_id:""}</span><span class="badge used">USED</span></div>
+    <div class="text">${esc(r.review_text)}</div>
+    <div class="small">${new Date(r.used_at).toLocaleString()}</div>
+  </article>`).join("");
+  $("historyMsg").textContent=list.length?`${list.length} used review${list.length===1?"":"s"} recorded`:"No used reviews yet";
+}
+function updateStats(){
+  const total=rows.length,available=rows.filter(x=>!x.is_used).length;
+  $("total").textContent=total;$("available").textContent=available;$("used").textContent="—";$("remaining").textContent=available;
+}
+function render(){
+  const q=$("search").value.trim().toLowerCase(),f=$("filter").value;
+  const filtered=rows.filter(r=>(f==="all"||(f==="used"?r.is_used:!r.is_used)) && (!q||r.review_text.toLowerCase().includes(q)));
+  $("list").innerHTML=filtered.map(r=>`<article class="item ${r.is_used?"used":""}">
+    <div class="item-top"><span class="small">#${r.id}</span><span class="badge ${r.is_used?"used":""}">${r.is_used?"USED":"AVAILABLE"}</span></div>
+    <div class="text">${esc(r.review_text)}</div>
+    <div class="actions"><button class="secondary" onclick="editReview(${r.id})">Edit</button><button class="danger" onclick="deleteReview(${r.id})">Delete</button></div>
+  </article>`).join("");
+  $("listMsg").textContent=filtered.length?`${filtered.length} review${filtered.length===1?"":"s"} shown`:"No reviews found";
+}
+$("search").oninput=render;$("filter").onchange=render;
+
+$("addBtn").onclick=async()=>{
+  hide($("addMsg"));
+  const blocks=$("bulkText").value.split(/\n\s*\n+/).map(s=>s.trim()).filter(Boolean);
+  if(!blocks.length){show($("addMsg"),"Please paste at least one review.");return}
+  $("addBtn").disabled=true;$("addBtn").textContent="Adding…";
+  const existing=new Set(rows.map(r=>r.review_text.trim()));
+  const unique=blocks.filter(t=>!existing.has(t));
+  if(!unique.length){show($("addMsg"),"All pasted reviews already exist.");$("addBtn").disabled=false;$("addBtn").textContent="＋ Add reviews";return}
+  const {data,error}=await client.from("review_suggestions").insert(unique.map(review_text=>({review_text,is_used:false}))).select("id,review_text,is_used");
+  $("addBtn").disabled=false;$("addBtn").textContent="＋ Add reviews";
+  if(error){show($("addMsg"),"Save failed: "+error.message);return}
+  $("bulkText").value="";show($("addMsg"),`${data.length} new review${data.length===1?"":"s"} added successfully.`,"notice");await loadReviews();
+};
+
+window.editReview=id=>{
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  editingId=id;$("editText").value=r.review_text;hide($("editMsg"));$("editModal").classList.remove("hidden");
+};
+async function saveEdit(){
+  const text=$("editText").value.trim();if(!text){show($("editMsg"),"Review text cannot be empty.");return}
+  $("saveEdit").disabled=true;$("saveEdit").textContent="Saving…";
+  const {error}=await client.from("review_suggestions").update({review_text:text}).eq("id",editingId);
+  $("saveEdit").disabled=false;$("saveEdit").textContent="Save changes";
+  if(error){show($("editMsg"),"Save failed: "+error.message);return}
+  $("editModal").classList.add("hidden");await loadReviews();
+}
+$("saveEdit").onclick=saveEdit;$("closeModal").onclick=()=>$("editModal").classList.add("hidden");$("cancelEdit").onclick=()=>$("editModal").classList.add("hidden");
+
+window.deleteReview=async id=>{
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  if(!confirm(`Delete review #${id}? This cannot be undone.`))return;
+  const {error}=await client.from("review_suggestions").delete().eq("id",id);
+  if(error){alert("Delete failed: "+error.message);return}
+  await loadReviews();
+};
+boot();
+</script>
+
+</body></html>
